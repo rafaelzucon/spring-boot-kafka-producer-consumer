@@ -1,6 +1,7 @@
 package com.simpleexample.kafka_producer_consumer;
 
 
+import com.google.gson.Gson;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -21,7 +22,7 @@ import java.util.Map;
 public class kafkaConfig {
 
     @Bean
-    public ProducerFactory<String, SimpleModel> producerFactory(){
+    public ProducerFactory<String, String> producerFactory(){
         Map<String, Object> config = new HashMap<>();
 
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"localhost:9092");
@@ -32,30 +33,35 @@ public class kafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, SimpleModel> kafkaTemplate(){
+    public KafkaTemplate<String, String> kafkaTemplate(){
 
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public ConsumerFactory<String, SimpleModel> consumerFactory(){
+    public ConsumerFactory<String, String> consumerFactory(){
         Map<String, Object> config = new HashMap<>();
 
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,"localhost:9092");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.GROUP_ID_CONFIG,"myGroupId");
 
-        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new JsonDeserializer<>(SimpleModel.class));
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), new StringDeserializer());
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, SimpleModel> kafkaListenerContainerFactory(){
-        ConcurrentKafkaListenerContainerFactory<String, SimpleModel> concurrentKafkaListenerContainerFactory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(){
+        ConcurrentKafkaListenerContainerFactory<String, String> concurrentKafkaListenerContainerFactory = new ConcurrentKafkaListenerContainerFactory<>();
 
         concurrentKafkaListenerContainerFactory.setConsumerFactory(consumerFactory());
 
         return concurrentKafkaListenerContainerFactory;
+    }
+
+    @Bean
+    public Gson jsonConverter(){
+        return new Gson();
     }
 
 }

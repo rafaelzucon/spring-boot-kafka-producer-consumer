@@ -26,7 +26,7 @@ public class SimpleController {
 
     @KafkaListener(topics = "myTopic")
     public void getFromKafka(SimpleModel simpleModel){
-        System.out.println(simpleModel.toString());
+        System.out.println(simpleModel.getField1()+" \n "+simpleModel.getField2());
     }
 
 }
