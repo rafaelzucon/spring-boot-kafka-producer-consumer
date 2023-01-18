@@ -1,6 +1,7 @@
 package com.simpleexample.kafka_producer_consumer;
 
 
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -13,20 +14,41 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/kafka")
 public class SimpleController {
 
-    private KafkaTemplate<String, SimpleModel> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate;
+    private Gson jsonConverter;
+
     @Autowired
-    public SimpleController(KafkaTemplate<String, SimpleModel> kafkaTemplate){
+    public SimpleController(KafkaTemplate<String, String> kafkaTemplate, Gson jsonConverter){
         this.kafkaTemplate = kafkaTemplate;
+        this.jsonConverter = jsonConverter;
     }
 
     @PostMapping
     public void post(@RequestBody SimpleModel simpleModel){
-        kafkaTemplate.send("myTopic", simpleModel);
+        kafkaTemplate.send("myTopic", jsonConverter.toJson(simpleModel));
+    }
+
+    @PostMapping("/v2")
+    public void post(@RequestBody MoreSimpleModel moreSimpleModel){
+        kafkaTemplate.send("myTopic2", jsonConverter.toJson(moreSimpleModel));
     }
 
     @KafkaListener(topics = "myTopic")
-    public void getFromKafka(SimpleModel simpleModel){
-        System.out.println(simpleModel.getField1()+" \n "+simpleModel.getField2());
+    public void getFromKafka(String simpleModel){
+        //System.out.println(simpleModel.getField1()+" \n "+simpleModel.getField2());
+
+        System.out.println(simpleModel);
+
+        SimpleModel simpleModel1 = (SimpleModel) jsonConverter.fromJson(simpleModel, SimpleModel.class);
+
+        System.out.println(simpleModel1.getField1()+" "+simpleModel1.getField2());
+    }
+
+    @KafkaListener(topics = "myTopic2")
+    public void getFromKafka2(String moreSimpleModel){
+        System.out.println(moreSimpleModel);
+        MoreSimpleModel moreSimpleModel1 = (MoreSimpleModel) jsonConverter.fromJson(moreSimpleModel, MoreSimpleModel.class);
+        System.out.println(moreSimpleModel1.getTitle()+" "+moreSimpleModel1.getDescription());
     }
 
 }
